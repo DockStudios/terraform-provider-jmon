@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 
@@ -123,28 +124,32 @@ func resourceCheckCreate(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func getCheckByName(d *schema.ResourceData, m interface{}) (error, bool, []byte) {
+func getCheckByName(d *schema.ResourceData, m interface{}, responseBody *[]byte) (error, bool) {
 	client := m.(*ProviderClient)
 
 	// Check request
+	log.Printf("[jmon] Perform GET: %s/api/v1/checks/%s", client.url, d.Get("name").(string))
 	req, err := http.NewRequest("GET", fmt.Sprintf("%s/api/v1/checks/%s", client.url, d.Get("name").(string)), nil)
 	if err != nil {
-		return err, false, nil
+		return err, false
 	}
 
 	// Perform request
 	r, err := client.httpClient.Do(req)
 	if err != nil {
-		return err, false, nil
+		return err, false
 	}
 	defer r.Body.Close()
 
 	// Read response body
-	var responseBody []byte
-	_, err = r.Body.Read(responseBody)
+	*responseBody, err = ioutil.ReadAll(r.Body)
+	//_, err = r.Body.Read(responseBody)
 	if err != nil {
-		return err, false, nil
+		return err, false
 	}
+
+	log.Printf("[jmon] Response code: %d", r.StatusCode)
+	log.Printf("[jmon] Body: %s", responseBody)
 
 	var exists bool
 	exists = true
@@ -153,12 +158,13 @@ func getCheckByName(d *schema.ResourceData, m interface{}) (error, bool, []byte)
 		exists = false
 	}
 
-	return nil, exists, responseBody
+	return nil, exists
 }
 
 func resourceCheckRead(d *schema.ResourceData, m interface{}) error {
 
-	err, exists, responseBody := getCheckByName(d, m)
+	var responseBody []byte
+	err, exists := getCheckByName(d, m, &responseBody)
 
 	if err != nil {
 		return err
