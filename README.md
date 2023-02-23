@@ -12,7 +12,25 @@ make
 
 ## Using in terraform
 
+Define the provider:
+```hcl
+provider "jmon" {
+  # This can be ommitted to default to http://localhost:5000
+  url = "https://my-jmon-installation.com"
+}
+
+terraform {
+  required_providers {
+    jmon = {
+      source  = "github.com/matthewjohn/jmon"
+    }
+  }
+}
 ```
+
+Create a minimal check:
+
+```hcl
 resource "jmon_check" "basic_check" {
   name = "My_Check"
 
@@ -23,8 +41,10 @@ resource "jmon_check" "basic_check" {
     title: Wikipedia, the free encyclopedia
 EOF
 }
+```
 
-## Fully populated with all attributes
+Fully populated check
+```hcl
 resource "jmon_check" "full_check" {
   name = "Fully_Populated"
 
@@ -55,18 +75,4 @@ resource "jmon_check" "full_check" {
     - screenshot: Homepage
 EOF
 
-provider "jmon" {
-  # This can be ommitted to default to http://localhost:5000
-  url = "https://my-jmon-installation.com"
-}
-
-terraform {
-  required_providers {
-    jmon = {
-      source  = "github.com/matthewjohn/jmon"
-      # Other parameters...
-    }
-  }
-}
-
-
+```
