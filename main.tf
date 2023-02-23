@@ -7,6 +7,8 @@ resource "jmon_check" "basic_check" {
 - check:
     title: Wikipedia, the free encyclopedia
 EOF
+
+  interval = 200
 }
 
 provider "jmon" {

@@ -2,6 +2,7 @@ package jmon
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -11,11 +12,11 @@ import (
 )
 
 type CheckData struct {
-	name                string        `yaml:"name"`
-	steps               []interface{} `yaml:"steps"`
-	screenshot_on_error bool          `yaml:"screenshot_on_error"`
-	interval            int           `yaml:"interval"`
-	client              string        `yaml:"client"`
+	Name              string        `yaml:"name"`
+	Steps             []interface{} `yaml:"steps"`
+	ScreenshotOnError bool          `yaml:"screenshot_on_error,omitempty"`
+	Interval          int           `yaml:"interval,omitempty"`
+	Client            string        `yaml:"client,omitempty"`
 }
 
 func resourceCheck() *schema.Resource {
@@ -50,18 +51,16 @@ func resourceCheck() *schema.Resource {
 	}
 }
 
-func resourceCheckCreate(d *schema.ResourceData, m interface{}) error {
-
-	var check CheckData
+func upsertCheck(d *schema.ResourceData, m interface{}, check *CheckData) error {
 
 	// Convert resource attributes to attributes of check data object
-	check.name = d.Get("name").(string)
-	check.interval = d.Get("interval").(int)
-	check.screenshot_on_error = d.Get("screenshot_on_error").(bool)
-	check.client = d.Get("client").(string)
+	check.Name = d.Get("name").(string)
+	check.Interval = d.Get("interval").(int)
+	check.ScreenshotOnError = d.Get("screenshot_on_error").(bool)
+	check.Client = d.Get("client").(string)
 
 	// Convert steps YAML to interface in check object
-	ymlErr := yaml.Unmarshal([]byte(d.Get("steps").(string)), &check.steps)
+	ymlErr := yaml.Unmarshal([]byte(d.Get("steps").(string)), &check.Steps)
 	if ymlErr != nil {
 		return ymlErr
 	}
@@ -70,7 +69,11 @@ func resourceCheckCreate(d *schema.ResourceData, m interface{}) error {
 
 	// Convert entire check to YAML
 	var yamlOutput []byte
-	yamlOutput, err := yaml.Marshal(check)
+	yamlOutput, err := yaml.Marshal(&check)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("YAML: %s", yamlOutput)
 
 	// Create reader for post data
 	postDataReader := bytes.NewReader(yamlOutput)
@@ -88,8 +91,32 @@ func resourceCheckCreate(d *schema.ResourceData, m interface{}) error {
 	}
 	defer r.Body.Close()
 
+	// Read response body
+	var responseBody []byte
+	_, err = r.Body.Read(responseBody)
+	if err != nil {
+		return err
+	}
+
+	// Check status code
+	if r.StatusCode != 200 {
+		return errors.New(fmt.Sprintf("Check failed to create: %s", string(responseBody[:])))
+	}
+
+	return nil
+}
+
+func resourceCheckCreate(d *schema.ResourceData, m interface{}) error {
+
+	var check CheckData
+	err := upsertCheck(d, m, &check)
+
+	if err != nil {
+		return err
+	}
+
 	// Set ID of resource to check name
-	d.SetId(check.name)
+	d.SetId(check.Name)
 
 	return nil
 }
@@ -99,6 +126,14 @@ func resourceCheckRead(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceCheckUpdate(d *schema.ResourceData, m interface{}) error {
+
+	var check CheckData
+	err := upsertCheck(d, m, &check)
+
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
