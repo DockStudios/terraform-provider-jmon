@@ -61,7 +61,7 @@ func resourceCheckCreate(d *schema.ResourceData, m interface{}) error {
 	check.client = d.Get("client").(string)
 
 	// Convert steps YAML to interface in check object
-	ymlErr := yaml.Unmarshal([]byte(d.Get("steps").(string)), check.steps)
+	ymlErr := yaml.Unmarshal([]byte(d.Get("steps").(string)), &check.steps)
 	if ymlErr != nil {
 		return ymlErr
 	}
