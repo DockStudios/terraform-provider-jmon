@@ -3,13 +3,13 @@ resource "jmon_check" "basic_check" {
 
   steps = <<EOF
 # Check homepage
-- goto: https://en.wikipedia.org/wiki/Main_Page
+- goto: https://www.google.co.uk
 - check:
-    title: Wikipedia, the free encyclopedia
+    title: Google
 EOF
 
-  interval = 200
-  client = "BROWSER_FIREFOX"
+  interval = 20
+  #client = "BROWSER_FIREFOX"
 }
 
 provider "jmon" {

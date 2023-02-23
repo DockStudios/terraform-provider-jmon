@@ -2,16 +2,17 @@ package jmon
 
 import (
 	//"log"
+	"context"
 	"net/http"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func Provider() terraform.ResourceProvider {
+func Provider() *schema.Provider {
 	return &schema.Provider{
-		ConfigureFunc: providerConfigure,
+		ConfigureContextFunc: providerConfigure,
 
 		Schema: map[string]*schema.Schema{
 			"url": {
@@ -34,7 +35,8 @@ type ProviderClient struct {
 	headers    http.Header
 }
 
-func providerConfigure(d *schema.ResourceData) (interface{}, error) {
+func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+	var diags diag.Diagnostics
 	client := &ProviderClient{}
 
 	url := d.Get("url").(string)
@@ -51,5 +53,5 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		Timeout: time.Second * 30,
 	}
 
-	return client, nil
+	return client, diags
 }

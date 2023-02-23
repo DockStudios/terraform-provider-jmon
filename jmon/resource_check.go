@@ -2,6 +2,7 @@ package jmon
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -10,7 +11,8 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 type CheckData struct {
@@ -23,10 +25,10 @@ type CheckData struct {
 
 func resourceCheck() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCheckCreate,
-		Read:   resourceCheckRead,
-		Update: resourceCheckUpdate,
-		Delete: resourceCheckDelete,
+		CreateContext: resourceCheckCreate,
+		ReadContext:   resourceCheckRead,
+		UpdateContext: resourceCheckUpdate,
+		DeleteContext: resourceCheckDelete,
 
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{
@@ -108,19 +110,20 @@ func upsertCheck(d *schema.ResourceData, m interface{}, check *CheckData) error 
 	return nil
 }
 
-func resourceCheckCreate(d *schema.ResourceData, m interface{}) error {
+func resourceCheckCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 
 	var check CheckData
 	err := upsertCheck(d, m, &check)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Set ID of resource to check name
 	d.SetId(check.Name)
 
-	return nil
+	return diags
 }
 
 func getCheckByName(d *schema.ResourceData, m interface{}, responseBody *[]byte) (error, bool) {
@@ -159,13 +162,15 @@ func getCheckByName(d *schema.ResourceData, m interface{}, responseBody *[]byte)
 	return nil, exists
 }
 
-func resourceCheckRead(d *schema.ResourceData, m interface{}) error {
+func resourceCheckRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+	var diags diag.Diagnostics
 
 	var responseBody []byte
 	err, exists := getCheckByName(d, m, &responseBody)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// If check does not exist, reset ID
@@ -173,19 +178,19 @@ func resourceCheckRead(d *schema.ResourceData, m interface{}) error {
 	if exists == false {
 		log.Printf("[jmon] Check does not exist: %s", string(responseBody))
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	var check CheckData
 	err = yaml.Unmarshal(responseBody, &check)
 	log.Printf("[jmon] Unmarshalled to: %v", check)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	stepsString, err := yaml.Marshal(&check.Steps)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.Set("interval", check.Interval)
@@ -193,34 +198,37 @@ func resourceCheckRead(d *schema.ResourceData, m interface{}) error {
 	d.Set("steps", string(stepsString))
 	d.Set("screenshot_on_error", check.ScreenshotOnError)
 
-	return nil
+	return diags
 }
 
-func resourceCheckUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceCheckUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 
 	var check CheckData
 	err := upsertCheck(d, m, &check)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceCheckDelete(d *schema.ResourceData, m interface{}) error {
+func resourceCheckDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	client := m.(*ProviderClient)
 
 	// Check request
 	req, err := http.NewRequest("DELETE", fmt.Sprintf("%s/api/v1/checks/%s", client.url, d.Get("name").(string)), nil)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Perform request
 	r, err := client.httpClient.Do(req)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	defer r.Body.Close()
 
@@ -228,13 +236,13 @@ func resourceCheckDelete(d *schema.ResourceData, m interface{}) error {
 	var responseBody []byte
 	responseBody, err = ioutil.ReadAll(r.Body)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Check status code
 	if r.StatusCode != 200 {
-		return errors.New(fmt.Sprintf("[jmon] Check failed to delete: %s", string(responseBody)))
+		return diag.FromErr(errors.New(fmt.Sprintf("[jmon] Check failed to delete: %s", string(responseBody))))
 	}
 
-	return nil
+	return diags
 }
