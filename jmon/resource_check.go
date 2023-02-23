@@ -76,7 +76,6 @@ func upsertCheck(d *schema.ResourceData, m interface{}, check *CheckData) error 
 	if err != nil {
 		return err
 	}
-	fmt.Printf("YAML: %s", yamlOutput)
 
 	// Create reader for post data
 	postDataReader := bytes.NewReader(yamlOutput)
@@ -143,7 +142,6 @@ func getCheckByName(d *schema.ResourceData, m interface{}, responseBody *[]byte)
 
 	// Read response body
 	*responseBody, err = ioutil.ReadAll(r.Body)
-	//_, err = r.Body.Read(responseBody)
 	if err != nil {
 		return err, false
 	}
@@ -235,7 +233,7 @@ func resourceCheckDelete(d *schema.ResourceData, m interface{}) error {
 
 	// Check status code
 	if r.StatusCode != 200 {
-		return errors.New(fmt.Sprintf("Check failed to delete: %s", string(responseBody)))
+		return errors.New(fmt.Sprintf("[jmon] Check failed to delete: %s", string(responseBody)))
 	}
 
 	return nil
