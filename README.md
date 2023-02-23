@@ -74,5 +74,6 @@ resource "jmon_check" "full_check" {
 - actions:
     - screenshot: Homepage
 EOF
+}
 
 ```
