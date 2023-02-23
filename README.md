@@ -4,7 +4,7 @@ Terraform provider for jmon
 
 ## Building and Installing
 
-Install golang 0.15+
+Install golang 1.15+
 
 ```
 make
