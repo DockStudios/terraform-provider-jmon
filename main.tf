@@ -9,6 +9,7 @@ resource "jmon_check" "basic_check" {
 EOF
 
   interval = 200
+  client = "does_not_exist"
 }
 
 provider "jmon" {

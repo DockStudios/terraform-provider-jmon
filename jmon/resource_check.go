@@ -96,14 +96,14 @@ func upsertCheck(d *schema.ResourceData, m interface{}, check *CheckData) error 
 
 	// Read response body
 	var responseBody []byte
-	_, err = r.Body.Read(responseBody)
+	responseBody, err = ioutil.ReadAll(r.Body)
 	if err != nil {
 		return err
 	}
 
 	// Check status code
 	if r.StatusCode != 200 {
-		return errors.New(fmt.Sprintf("Check failed to create/update: %s", string(responseBody[:])))
+		return errors.New(fmt.Sprintf("Check failed to create/update: %s", string(responseBody)))
 	}
 
 	return nil
