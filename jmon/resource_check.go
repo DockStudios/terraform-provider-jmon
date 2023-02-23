@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 
 	"gopkg.in/yaml.v2"
@@ -30,6 +31,7 @@ func resourceCheck() *schema.Resource {
 			"name": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"steps": &schema.Schema{
 				Type:     schema.TypeString,
@@ -100,7 +102,7 @@ func upsertCheck(d *schema.ResourceData, m interface{}, check *CheckData) error 
 
 	// Check status code
 	if r.StatusCode != 200 {
-		return errors.New(fmt.Sprintf("Check failed to create: %s", string(responseBody[:])))
+		return errors.New(fmt.Sprintf("Check failed to create/update: %s", string(responseBody[:])))
 	}
 
 	return nil
@@ -121,7 +123,65 @@ func resourceCheckCreate(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
+func getCheckByName(d *schema.ResourceData, m interface{}) (error, bool, []byte) {
+	client := m.(*ProviderClient)
+
+	// Check request
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/api/v1/checks/%s", client.url, d.Get("name").(string)), nil)
+	if err != nil {
+		return err, false, nil
+	}
+
+	// Perform request
+	r, err := client.httpClient.Do(req)
+	if err != nil {
+		return err, false, nil
+	}
+	defer r.Body.Close()
+
+	// Read response body
+	var responseBody []byte
+	_, err = r.Body.Read(responseBody)
+	if err != nil {
+		return err, false, nil
+	}
+
+	var exists bool
+	exists = true
+	// Check status code to determine if check exists
+	if r.StatusCode == 404 {
+		exists = false
+	}
+
+	return nil, exists, responseBody
+}
+
 func resourceCheckRead(d *schema.ResourceData, m interface{}) error {
+
+	err, exists, responseBody := getCheckByName(d, m)
+
+	if err != nil {
+		return err
+	}
+
+	// If check does not exist, reset ID
+	// and return early
+	if exists == false {
+		log.Printf("Check does not exist: %s", string(responseBody[:]))
+		d.SetId("")
+		return nil
+	}
+
+	var check CheckData
+	err = yaml.Unmarshal(responseBody, &check)
+	if err != nil {
+		return err
+	}
+
+	d.Set("interval", check.Interval)
+	d.Set("client", check.Client)
+	d.Set("steps", check.Steps)
+
 	return nil
 }
 
@@ -138,5 +198,32 @@ func resourceCheckUpdate(d *schema.ResourceData, m interface{}) error {
 }
 
 func resourceCheckDelete(d *schema.ResourceData, m interface{}) error {
+	client := m.(*ProviderClient)
+
+	// Check request
+	req, err := http.NewRequest("DELETE", fmt.Sprintf("%s/api/v1/checks/%s", client.url, d.Get("name").(string)), nil)
+	if err != nil {
+		return err
+	}
+
+	// Perform request
+	r, err := client.httpClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer r.Body.Close()
+
+	// Read response body
+	var responseBody []byte
+	_, err = r.Body.Read(responseBody)
+	if err != nil {
+		return err
+	}
+
+	// Check status code
+	if r.StatusCode != 200 {
+		return errors.New(fmt.Sprintf("Check failed to delete: %s", string(responseBody[:])))
+	}
+
 	return nil
 }
