@@ -173,20 +173,27 @@ func resourceCheckRead(d *schema.ResourceData, m interface{}) error {
 	// If check does not exist, reset ID
 	// and return early
 	if exists == false {
-		log.Printf("Check does not exist: %s", string(responseBody[:]))
+		log.Printf("[jmon] Check does not exist: %s", string(responseBody))
 		d.SetId("")
 		return nil
 	}
 
 	var check CheckData
 	err = yaml.Unmarshal(responseBody, &check)
+	log.Printf("[jmon] Unmarshalled to: %v", check)
+	if err != nil {
+		return err
+	}
+
+	stepsString, err := yaml.Marshal(&check.Steps)
 	if err != nil {
 		return err
 	}
 
 	d.Set("interval", check.Interval)
 	d.Set("client", check.Client)
-	d.Set("steps", check.Steps)
+	d.Set("steps", string(stepsString))
+	d.Set("screenshot_on_error", check.ScreenshotOnError)
 
 	return nil
 }
