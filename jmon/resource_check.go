@@ -116,8 +116,18 @@ func upsertCheck(d *schema.ResourceData, m interface{}, check *CheckData) error 
 func resourceCheckCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
+	// Determine if check already exists
+	var responseBody []byte
+	err, exists := getCheckByName(d, m, d.Get("name").(string), &responseBody)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	if exists {
+		return diag.FromErr(errors.New(fmt.Sprintf("A check already exists with the name: %s", d.Get("name").(string))))
+	}
+
 	var check CheckData
-	err := upsertCheck(d, m, &check)
+	err = upsertCheck(d, m, &check)
 
 	if err != nil {
 		return diag.FromErr(err)
