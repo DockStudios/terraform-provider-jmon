@@ -53,6 +53,9 @@ func resourceCheck() *schema.Resource {
 				Optional: true,
 			},
 		},
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 	}
 }
 
@@ -126,12 +129,12 @@ func resourceCheckCreate(ctx context.Context, d *schema.ResourceData, m interfac
 	return diags
 }
 
-func getCheckByName(d *schema.ResourceData, m interface{}, responseBody *[]byte) (error, bool) {
+func getCheckByName(d *schema.ResourceData, m interface{}, name string, responseBody *[]byte) (error, bool) {
 	client := m.(*ProviderClient)
 
 	// Check request
-	log.Printf("[jmon] Perform GET: %s/api/v1/checks/%s", client.url, d.Get("name").(string))
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/api/v1/checks/%s", client.url, d.Get("name").(string)), nil)
+	log.Printf("[jmon] Perform GET: %s/api/v1/checks/%s", client.url, name)
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/api/v1/checks/%s", client.url, name), nil)
 	if err != nil {
 		return err, false
 	}
@@ -167,7 +170,7 @@ func resourceCheckRead(ctx context.Context, d *schema.ResourceData, m interface{
 	var diags diag.Diagnostics
 
 	var responseBody []byte
-	err, exists := getCheckByName(d, m, &responseBody)
+	err, exists := getCheckByName(d, m, d.Id(), &responseBody)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -192,6 +195,11 @@ func resourceCheckRead(ctx context.Context, d *schema.ResourceData, m interface{
 	if err != nil {
 		return diag.FromErr(err)
 	}
+
+	// Set name attribute from ID of object.
+	// This is important during imports, as the name attribute
+	// does not yet exist, so will be updated from the imported ID
+	d.Set("name", d.Id())
 
 	d.Set("interval", check.Interval)
 	d.Set("client", check.Client)
