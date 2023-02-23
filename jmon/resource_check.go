@@ -21,11 +21,6 @@ type CheckData struct {
 	Client            string        `yaml:"client,omitempty"`
 }
 
-type JmonResponse struct {
-	message string `yaml:"msg"`
-	status  string `yaml:"status"`
-}
-
 func resourceCheck() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceCheckCreate,
@@ -108,9 +103,7 @@ func upsertCheck(d *schema.ResourceData, m interface{}, check *CheckData) error 
 
 	// Check status code
 	if r.StatusCode != 200 {
-		var response JmonResponse
-		getResponseFromBody(&responseBody, &response)
-		return errors.New(fmt.Sprintf("Check failed to create/update: %s", response.message))
+		return errors.New(fmt.Sprintf("Check failed to create/update: %s", string(responseBody)))
 	}
 
 	return nil
@@ -129,15 +122,6 @@ func resourceCheckCreate(d *schema.ResourceData, m interface{}) error {
 	d.SetId(check.Name)
 
 	return nil
-}
-
-func getResponseFromBody(responseBody *[]byte, response *JmonResponse) bool {
-	err := yaml.Unmarshal(*responseBody, response)
-	log.Printf("[jmon] Unmarshalled response to: %v", response)
-	if err != nil {
-		return false
-	}
-	return true
 }
 
 func getCheckByName(d *schema.ResourceData, m interface{}, responseBody *[]byte) (error, bool) {
@@ -251,9 +235,7 @@ func resourceCheckDelete(d *schema.ResourceData, m interface{}) error {
 
 	// Check status code
 	if r.StatusCode != 200 {
-		var response JmonResponse
-		getResponseFromBody(&responseBody, &response)
-		return errors.New(fmt.Sprintf("Check failed to delete: %s", response.message))
+		return errors.New(fmt.Sprintf("Check failed to delete: %s", string(responseBody)))
 	}
 
 	return nil
