@@ -21,6 +21,7 @@ type CheckData struct {
 	ScreenshotOnError bool          `yaml:"screenshot_on_error,omitempty"`
 	Interval          int           `yaml:"interval,omitempty"`
 	Client            string        `yaml:"client,omitempty"`
+	Enable            bool          `yaml:"enable,omitempty"`
 }
 
 func resourceCheck() *schema.Resource {
@@ -52,6 +53,11 @@ func resourceCheck() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"enable": &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
 		},
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -66,6 +72,7 @@ func upsertCheck(d *schema.ResourceData, m interface{}, check *CheckData) error 
 	check.Interval = d.Get("interval").(int)
 	check.ScreenshotOnError = d.Get("screenshot_on_error").(bool)
 	check.Client = d.Get("client").(string)
+	check.Enable = d.Get("enable").(bool)
 
 	// Convert steps YAML to interface in check object
 	ymlErr := yaml.Unmarshal([]byte(d.Get("steps").(string)), &check.Steps)
@@ -215,6 +222,7 @@ func resourceCheckRead(ctx context.Context, d *schema.ResourceData, m interface{
 	d.Set("client", check.Client)
 	d.Set("steps", string(stepsString))
 	d.Set("screenshot_on_error", check.ScreenshotOnError)
+	d.Set("enable", check.Enable)
 
 	return diags
 }
