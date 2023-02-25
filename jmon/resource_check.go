@@ -94,11 +94,7 @@ func nameEnvironmentFromId(id string) (string, string, error) {
 }
 
 func generateCheckUrl(client *ProviderClient, name string, environment string) string {
-	var baseUrl string = fmt.Sprintf("%s/api/v1/checks/%s", client.url, name)
-	if environment != "" {
-		baseUrl += fmt.Sprintf("/%s", environment)
-	}
-	return baseUrl
+	return fmt.Sprintf("%s/api/v1/checks/%s/environments/%s", client.url, name, environment)
 }
 
 func upsertCheck(d *schema.ResourceData, m interface{}, check *CheckData) error {
@@ -162,7 +158,7 @@ func resourceCheckCreate(ctx context.Context, d *schema.ResourceData, m interfac
 
 	// Determine if check already exists
 	var responseBody []byte
-	err, exists := getCheckByName(d, m, d.Get("name").(string), d.Get("environment").(string), &responseBody)
+	err, exists := getCheckByNameAndEnvironment(d, m, d.Get("name").(string), d.Get("environment").(string), &responseBody)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -183,11 +179,11 @@ func resourceCheckCreate(ctx context.Context, d *schema.ResourceData, m interfac
 	return diags
 }
 
-func getCheckByName(d *schema.ResourceData, m interface{}, name string, environment string, responseBody *[]byte) (error, bool) {
+func getCheckByNameAndEnvironment(d *schema.ResourceData, m interface{}, name string, environment string, responseBody *[]byte) (error, bool) {
 	client := m.(*ProviderClient)
 
 	// Check request
-	var url string = generateCheckUrl(client, d.Get("name").(string), d.Get("environment").(string))
+	var url string = generateCheckUrl(client, name, environment)
 	log.Printf("[jmon] Perform GET: %s", url)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -228,9 +224,14 @@ func resourceCheckRead(ctx context.Context, d *schema.ResourceData, m interface{
 	if err != nil {
 		return diag.FromErr(err)
 	}
+	// Set default environment, if it does not exist
+	if environment == "" {
+		environment = "default"
+		d.SetId(generateId(name, "default"))
+	}
 
 	var responseBody []byte
-	err, exists := getCheckByName(d, m, name, environment, &responseBody)
+	err, exists := getCheckByNameAndEnvironment(d, m, name, environment, &responseBody)
 
 	if err != nil {
 		return diag.FromErr(err)
