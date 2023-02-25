@@ -43,6 +43,7 @@ func resourceCheck() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
+				Default:  "default",
 			},
 			"steps": &schema.Schema{
 				Type:     schema.TypeString,
