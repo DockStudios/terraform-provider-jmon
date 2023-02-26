@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 
 	"gopkg.in/yaml.v2"
 
@@ -17,6 +18,7 @@ import (
 
 type CheckData struct {
 	Name              string        `yaml:"name"`
+	Environment       string        `yaml:"environment,omitempty"`
 	Steps             []interface{} `yaml:"steps"`
 	ScreenshotOnError bool          `yaml:"screenshot_on_error,omitempty"`
 	Interval          int           `yaml:"interval,omitempty"`
@@ -37,6 +39,12 @@ func resourceCheck() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"environment": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Computed: true,
+			},
 			"steps": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
@@ -44,19 +52,22 @@ func resourceCheck() *schema.Resource {
 			"screenshot_on_error": &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 			},
 			"interval": &schema.Schema{
 				Type:     schema.TypeInt,
 				Optional: true,
+				Computed: true,
 			},
 			"client": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"enable": &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  true,
+				Computed: true,
 			},
 		},
 		Importer: &schema.ResourceImporter{
@@ -65,10 +76,35 @@ func resourceCheck() *schema.Resource {
 	}
 }
 
+func generateId(name string, environment string) string {
+	var id string
+	id = name
+	if environment != "" {
+		id = id + "/" + environment
+	}
+	return id
+}
+
+func nameEnvironmentFromId(id string) (string, string, error) {
+	splitNames := strings.Split(id, "/")
+	if len(splitNames) == 1 {
+		return splitNames[0], "", nil
+	} else if len(splitNames) == 2 {
+		return splitNames[0], splitNames[1], nil
+	} else {
+		return "", "", errors.New("Cannot parse invalid ID")
+	}
+}
+
+func generateCheckUrl(client *ProviderClient, name string, environment string) string {
+	return fmt.Sprintf("%s/api/v1/checks/%s/environments/%s", client.url, name, environment)
+}
+
 func upsertCheck(d *schema.ResourceData, m interface{}, check *CheckData) error {
 
 	// Convert resource attributes to attributes of check data object
 	check.Name = d.Get("name").(string)
+	check.Environment = d.Get("environment").(string)
 	check.Interval = d.Get("interval").(int)
 	check.ScreenshotOnError = d.Get("screenshot_on_error").(bool)
 	check.Client = d.Get("client").(string)
@@ -125,7 +161,7 @@ func resourceCheckCreate(ctx context.Context, d *schema.ResourceData, m interfac
 
 	// Determine if check already exists
 	var responseBody []byte
-	err, exists := getCheckByName(d, m, d.Get("name").(string), &responseBody)
+	err, exists := getCheckByNameAndEnvironment(d, m, d.Get("name").(string), d.Get("environment").(string), &responseBody)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -141,17 +177,18 @@ func resourceCheckCreate(ctx context.Context, d *schema.ResourceData, m interfac
 	}
 
 	// Set ID of resource to check name
-	d.SetId(check.Name)
+	d.SetId(generateId(check.Name, check.Environment))
 
 	return diags
 }
 
-func getCheckByName(d *schema.ResourceData, m interface{}, name string, responseBody *[]byte) (error, bool) {
+func getCheckByNameAndEnvironment(d *schema.ResourceData, m interface{}, name string, environment string, responseBody *[]byte) (error, bool) {
 	client := m.(*ProviderClient)
 
 	// Check request
-	log.Printf("[jmon] Perform GET: %s/api/v1/checks/%s", client.url, name)
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/api/v1/checks/%s", client.url, name), nil)
+	var url string = generateCheckUrl(client, name, environment)
+	log.Printf("[jmon] Perform GET: %s", url)
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return err, false
 	}
@@ -186,8 +223,18 @@ func resourceCheckRead(ctx context.Context, d *schema.ResourceData, m interface{
 
 	var diags diag.Diagnostics
 
+	name, environment, err := nameEnvironmentFromId(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	// Set default environment, if it does not exist
+	if environment == "" {
+		environment = "default"
+		d.SetId(generateId(name, "default"))
+	}
+
 	var responseBody []byte
-	err, exists := getCheckByName(d, m, d.Id(), &responseBody)
+	err, exists := getCheckByNameAndEnvironment(d, m, name, environment, &responseBody)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -216,7 +263,8 @@ func resourceCheckRead(ctx context.Context, d *schema.ResourceData, m interface{
 	// Set name attribute from ID of object.
 	// This is important during imports, as the name attribute
 	// does not yet exist, so will be updated from the imported ID
-	d.Set("name", d.Id())
+	d.Set("name", name)
+	d.Set("environment", environment)
 
 	d.Set("interval", check.Interval)
 	d.Set("client", check.Client)
@@ -246,7 +294,7 @@ func resourceCheckDelete(ctx context.Context, d *schema.ResourceData, m interfac
 	client := m.(*ProviderClient)
 
 	// Check request
-	req, err := http.NewRequest("DELETE", fmt.Sprintf("%s/api/v1/checks/%s", client.url, d.Get("name").(string)), nil)
+	req, err := http.NewRequest("DELETE", generateCheckUrl(client, d.Get("name").(string), d.Get("environment").(string)), nil)
 	if err != nil {
 		return diag.FromErr(err)
 	}
