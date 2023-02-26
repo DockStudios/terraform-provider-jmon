@@ -49,6 +49,9 @@ func getEnvironmentByName(d *schema.ResourceData, m interface{}, name string, re
 		return err, false
 	}
 
+	// Add headers to request
+	req.Header = client.headers.Clone()
+
 	// Perform request
 	r, err := client.httpClient.Do(req)
 	if err != nil {
@@ -91,17 +94,21 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, m in
 	// Create environment
 	client := m.(*ProviderClient)
 	var url string = fmt.Sprintf("%s/api/v1/environments", client.url)
-	log.Printf("[jmon] Perform POST: %s", url)
 	values := map[string]string{"name": d.Get("name").(string)}
 	jsonPostData, err := json.Marshal(values)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
+	// Create HTTP request
+	log.Printf("[jmon] Perform POST: %s: %s", url, jsonPostData)
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonPostData))
 	if err != nil {
 		return diag.FromErr(err)
 	}
+
+	// Add headers to request
+	req.Header = client.headers.Clone()
 
 	// Perform request
 	r, err := client.httpClient.Do(req)
@@ -114,6 +121,13 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, m in
 	responseBody, err = ioutil.ReadAll(r.Body)
 	if err != nil {
 		return diag.FromErr(err)
+	}
+
+	log.Printf("[jmon] Response code: %d", r.StatusCode)
+	log.Printf("[jmon] Body: %s", responseBody)
+
+	if r.StatusCode != 200 {
+		return diag.FromErr(errors.New(fmt.Sprintf("Got response code: %d from server: %s", r.StatusCode, string(responseBody))))
 	}
 
 	// Set ID of resource to environment name
@@ -168,6 +182,9 @@ func resourceEnvironmentDelete(ctx context.Context, d *schema.ResourceData, m in
 	if err != nil {
 		return diag.FromErr(err)
 	}
+
+	// Add headers to request
+	req.Header = client.headers.Clone()
 
 	// Perform request
 	r, err := client.httpClient.Do(req)
