@@ -24,7 +24,8 @@ func Provider() *schema.Provider {
 		DataSourcesMap: map[string]*schema.Resource{},
 
 		ResourcesMap: map[string]*schema.Resource{
-			"jmon_check": resourceCheck(),
+			"jmon_environment": resourceEnvironment(),
+			"jmon_check":       resourceCheck(),
 		},
 	}
 }
