@@ -43,7 +43,7 @@ func resourceCheck() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
-				Default:  "default",
+				Computed: true,
 			},
 			"steps": &schema.Schema{
 				Type:     schema.TypeString,
@@ -52,19 +52,22 @@ func resourceCheck() *schema.Resource {
 			"screenshot_on_error": &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 			},
 			"interval": &schema.Schema{
 				Type:     schema.TypeInt,
 				Optional: true,
+				Computed: true,
 			},
 			"client": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"enable": &schema.Schema{
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  true,
+				Computed: true,
 			},
 		},
 		Importer: &schema.ResourceImporter{
