@@ -4,7 +4,7 @@ resource "jmon_environment" "production" {
 }
 
 resource "jmon_check" "prod_check" {
-  name = "My_Check"
+  name = "Blank_Check"
   environment = jmon_environment.production.id
 
   steps = <<EOF
@@ -13,9 +13,10 @@ resource "jmon_check" "prod_check" {
 EOF
 }
 
-resource "jmon_check" "basic_check" {
-  name = "My_Check"
+resource "jmon_check" "full_check" {
+  name = "Check_Google_Homepage"
 
+  environment = "default"
 
   steps = <<EOF
 # Check homepage
