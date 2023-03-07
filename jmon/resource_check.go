@@ -22,6 +22,7 @@ type CheckData struct {
 	Steps             []interface{} `yaml:"steps"`
 	ScreenshotOnError bool          `yaml:"screenshot_on_error,omitempty"`
 	Interval          int           `yaml:"interval,omitempty"`
+	Timeout           int           `yaml:"timeout,omitempty"`
 	Client            string        `yaml:"client,omitempty"`
 	Enable            bool          `yaml:"enable,omitempty"`
 }
@@ -55,6 +56,11 @@ func resourceCheck() *schema.Resource {
 				Computed: true,
 			},
 			"interval": &schema.Schema{
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"timeout": &schema.Schema{
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -106,6 +112,7 @@ func upsertCheck(d *schema.ResourceData, m interface{}, check *CheckData) error 
 	check.Name = d.Get("name").(string)
 	check.Environment = d.Get("environment").(string)
 	check.Interval = d.Get("interval").(int)
+	check.Timeout = d.Get("timeout").(int)
 	check.ScreenshotOnError = d.Get("screenshot_on_error").(bool)
 	check.Client = d.Get("client").(string)
 	check.Enable = d.Get("enable").(bool)
@@ -267,6 +274,7 @@ func resourceCheckRead(ctx context.Context, d *schema.ResourceData, m interface{
 	d.Set("environment", environment)
 
 	d.Set("interval", check.Interval)
+	d.Set("timeout", check.Timeout)
 	d.Set("client", check.Client)
 	d.Set("steps", string(stepsString))
 	d.Set("screenshot_on_error", check.ScreenshotOnError)
