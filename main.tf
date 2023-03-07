@@ -17,6 +17,7 @@ resource "jmon_check" "full_check" {
   name = "Check_Google_Homepage"
 
   environment = "default"
+  timeout = 30
 
   steps = <<EOF
 # Check homepage

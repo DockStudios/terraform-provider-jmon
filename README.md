@@ -43,11 +43,17 @@ EOF
 }
 ```
 
-Fully populated check
+An environment with a fully populated check
 ```hcl
+resource "jmon_environment" "production" {
+  name = "production"
+}
+
 resource "jmon_check" "full_check" {
   name = "Fully_Populated"
 
+  environment         = jmon_environment.production.name
+  timeout             = 60
   interval            = 300
   client              = "BROWSER_FIREFOX"
   screenshot_on_error = true
