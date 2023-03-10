@@ -32,7 +32,8 @@ EOF
 }
 
 provider "jmon" {
-
+  url     = "http://localhost:5000"
+  api_key = "3fc1ce69-d9a2-43f9-ba0d-9f4e21c20eac"
 }
 
 terraform {
