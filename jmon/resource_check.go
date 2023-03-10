@@ -141,6 +141,9 @@ func upsertCheck(d *schema.ResourceData, m interface{}, check *CheckData) error 
 		return err
 	}
 
+	// Add headers to request
+	req.Header = client.headers.Clone()
+
 	// Perform request
 	r, err := client.httpClient.Do(req)
 	if err != nil {
@@ -199,6 +202,9 @@ func getCheckByNameAndEnvironment(d *schema.ResourceData, m interface{}, name st
 	if err != nil {
 		return err, false
 	}
+
+	// Add headers to request
+	req.Header = client.headers.Clone()
 
 	// Perform request
 	r, err := client.httpClient.Do(req)
@@ -306,6 +312,9 @@ func resourceCheckDelete(ctx context.Context, d *schema.ResourceData, m interfac
 	if err != nil {
 		return diag.FromErr(err)
 	}
+
+	// Add headers to request
+	req.Header = client.headers.Clone()
 
 	// Perform request
 	r, err := client.httpClient.Do(req)
