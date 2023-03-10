@@ -19,6 +19,10 @@ func Provider() *schema.Provider {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"api_key": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{},
@@ -32,6 +36,7 @@ func Provider() *schema.Provider {
 
 type ProviderClient struct {
 	url        string
+	apiKey     string
 	httpClient *http.Client
 	headers    http.Header
 }
@@ -46,9 +51,14 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 	}
 	client.url = url
 
+	client.apiKey = d.Get("api_key").(string)
+
 	client.headers = make(http.Header)
 	client.headers.Set("Content-Type", "application/json")
 	client.headers.Set("Accept", "application/json")
+	if client.apiKey != "" {
+		client.headers.Set("X-JMon-Api-Key", client.apiKey)
+	}
 
 	client.httpClient = &http.Client{
 		Timeout: time.Second * 30,
