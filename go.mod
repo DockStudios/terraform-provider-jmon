@@ -1,4 +1,4 @@
-module github.com/matthewjohn/jmon-terraform-provider
+module github.com/dockstudios/jmon-terraform-provider
 
 go 1.20
 
