@@ -35,15 +35,33 @@ EOF
   }
 }
 
+
+resource "jmon_check" "api_check" {
+  name = "Check_DummyJson_Api"
+
+  environment = "default"
+
+  steps = <<EOF
+- goto: https://dummyjson.com/products/1
+- check:
+    json:
+      selector: '$.id'
+      equals: 1
+- check:
+    json:
+      selector: '$.images[0]'
+      contains: 1.jpg
+EOF
+}
+
 provider "jmon" {
   url     = "http://localhost:5000"
-  api_key = "3fc1ce69-d9a2-43f9-ba0d-9f4e21c20eac"
 }
 
 terraform {
   required_providers {
     jmon = {
-      source  = "github.com/dockstudios/jmon"
+      source  = "dockstudios/jmon"
       # Other parameters...
     }
   }
