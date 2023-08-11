@@ -60,7 +60,7 @@ provider "jmon" {
 terraform {
   required_providers {
     jmon = {
-      source  = "github.com/dockstudios/jmon"
+      source  = "dockstudios/jmon"
       # Other parameters...
     }
   }
