@@ -17,14 +17,15 @@ import (
 )
 
 type CheckData struct {
-	Name              string        `yaml:"name"`
-	Environment       string        `yaml:"environment,omitempty"`
-	Steps             []interface{} `yaml:"steps"`
-	ScreenshotOnError bool          `yaml:"screenshot_on_error,omitempty"`
-	Interval          int           `yaml:"interval,omitempty"`
-	Timeout           int           `yaml:"timeout,omitempty"`
-	Client            string        `yaml:"client,omitempty"`
-	Enable            bool          `yaml:"enable,omitempty"`
+	Name              string                 `yaml:"name"`
+	Environment       string                 `yaml:"environment,omitempty"`
+	Steps             []interface{}          `yaml:"steps"`
+	ScreenshotOnError bool                   `yaml:"screenshot_on_error,omitempty"`
+	Interval          int                    `yaml:"interval,omitempty"`
+	Timeout           int                    `yaml:"timeout,omitempty"`
+	Client            string                 `yaml:"client,omitempty"`
+	Enable            bool                   `yaml:"enable,omitempty"`
+	Attributes        map[string]interface{} `yaml:"attributes,omitempty"`
 }
 
 func resourceCheck() *schema.Resource {
@@ -75,6 +76,11 @@ func resourceCheck() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"attributes": &schema.Schema{
+				Type:     schema.TypeMap,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Optional: true,
+			},
 		},
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -116,6 +122,7 @@ func upsertCheck(d *schema.ResourceData, m interface{}, check *CheckData) error 
 	check.ScreenshotOnError = d.Get("screenshot_on_error").(bool)
 	check.Client = d.Get("client").(string)
 	check.Enable = d.Get("enable").(bool)
+	check.Attributes = d.Get("attributes").(map[string]interface{})
 
 	// Convert steps YAML to interface in check object
 	ymlErr := yaml.Unmarshal([]byte(d.Get("steps").(string)), &check.Steps)
@@ -285,6 +292,7 @@ func resourceCheckRead(ctx context.Context, d *schema.ResourceData, m interface{
 	d.Set("steps", string(stepsString))
 	d.Set("screenshot_on_error", check.ScreenshotOnError)
 	d.Set("enable", check.Enable)
+	d.Set("attributes", check.Attributes)
 
 	return diags
 }
