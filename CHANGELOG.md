@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.2.2](https://gitlab.dockstudios.co.uk/pub/jmon/jmon-terraform-provider/compare/v2.2.1...v2.2.2) (2023-08-11)
+
+
+### Bug Fixes
+
+* **docs:** Fix example for JSON matching ([85f98dc](https://gitlab.dockstudios.co.uk/pub/jmon/jmon-terraform-provider/commit/85f98dc3f5bfdbb3948c972197fdb1ac91c78dd9))
+* Fix call to provider ([d69e539](https://gitlab.dockstudios.co.uk/pub/jmon/jmon-terraform-provider/commit/d69e539db70c918c28f1c72b02305d64c8ff7876))
+
 ## [2.2.1](https://gitlab.dockstudios.co.uk/pub/jmon/jmon-terraform-provider/compare/v2.2.0...v2.2.1) (2023-08-11)
 
 
