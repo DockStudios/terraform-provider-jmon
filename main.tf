@@ -29,6 +29,10 @@ resource "jmon_check" "full_check" {
 EOF
 
   interval = 20
+
+  attributes = {
+    notification_slack_channel = "test"
+  }
 }
 
 provider "jmon" {
