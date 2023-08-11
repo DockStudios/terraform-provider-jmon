@@ -1,5 +1,12 @@
 # Changelog
 
+# [2.2.0](https://gitlab.dockstudios.co.uk/pub/jmon/jmon-terraform-provider/compare/v2.1.1...v2.2.0) (2023-08-11)
+
+
+### Features
+
+* Add support for setting check attributes ([e6d5328](https://gitlab.dockstudios.co.uk/pub/jmon/jmon-terraform-provider/commit/e6d532806716e087628d84c264c34bef3d23bb9d)), closes [#6](https://gitlab.dockstudios.co.uk/pub/jmon/jmon-terraform-provider/issues/6)
+
 # [2.1.0](https://gitlab.dockstudios.co.uk/pub/jmon/jmon-terraform-provider/compare/v2.0.0...v2.1.0) (2023-08-10)
 
 
