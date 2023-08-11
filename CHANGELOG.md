@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.1](https://gitlab.dockstudios.co.uk/pub/jmon/jmon-terraform-provider/compare/v2.2.0...v2.2.1) (2023-08-11)
+
+
+### Bug Fixes
+
+* Fix references to matthewjohn, after moving repository to dockstudios ([3be1124](https://gitlab.dockstudios.co.uk/pub/jmon/jmon-terraform-provider/commit/3be11242c51dbc10f3106b6fbc21049a780e0a82)), closes [#5](https://gitlab.dockstudios.co.uk/pub/jmon/jmon-terraform-provider/issues/5)
+
 # [2.2.0](https://gitlab.dockstudios.co.uk/pub/jmon/jmon-terraform-provider/compare/v2.1.1...v2.2.0) (2023-08-11)
 
 
