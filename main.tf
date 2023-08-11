@@ -45,10 +45,11 @@ resource "jmon_check" "api_check" {
 - goto: https://dummyjson.com/products/1
 - check:
     json:
-      selector: '.id'
+      selector: '$.id'
       equals: 1
+- check:
     json:
-      selector: '.images[0]'
+      selector: '$.images[0]'
       contains: 1.jpg
 EOF
 }
