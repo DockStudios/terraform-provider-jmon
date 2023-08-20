@@ -35,6 +35,31 @@ EOF
   }
 }
 
+resource "jmon_check" "example_plugin_call" {
+  name = "Example_Plugin_Call"
+
+  environment = "default"
+
+  steps = <<EOF
+# Call "example-plugin" plugin, passing in example_argument argument
+ - call_plugin:
+     example-plugin:
+       example_argument: 'example_value'
+
+# Call example plugin a second time
+ - call_plugin:
+     example-plugin:
+       example_argument: 'example_value'
+
+# Go to URL that contains run variable, set by plugin
+ - goto: https://example.com/{variable_set_by_example_plugin}
+EOF
+
+  attributes = {
+    example_attribute = "Test value"
+  }
+}
+
 
 resource "jmon_check" "api_check" {
   name = "Check_DummyJson_Api"
@@ -43,7 +68,12 @@ resource "jmon_check" "api_check" {
   interval    = 300
 
   steps = <<EOF
-- goto: https://dummyjson.com/products/1
+- goto:
+    url: https://dummyjson.com/products/1
+    headers:
+      Content-Type: application/json
+    body: {id: 1}
+    method: get
 - check:
     json:
       selector: '$.id'
