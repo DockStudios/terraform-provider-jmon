@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"reflect"
 	"strings"
 
 	"gopkg.in/yaml.v2"
@@ -275,9 +276,28 @@ func resourceCheckRead(ctx context.Context, d *schema.ResourceData, m interface{
 		return diag.FromErr(err)
 	}
 
-	stepsString, err := yaml.Marshal(&check.Steps)
-	if err != nil {
-		return diag.FromErr(err)
+	// Only set steps string from API response, if the strctures differ.
+	// If they aren't different, do not update, comments and insignificant
+	// whitespace changes will cause a different in value, even if the
+	// generated structure is fundermentally the same.
+	updateSteps := true
+
+	// Unmarshall current steps and perform deep compare
+	var currentSteps []interface{}
+	ymlErr := yaml.Unmarshal([]byte(d.Get("steps").(string)), &currentSteps)
+	if ymlErr == nil {
+		if reflect.DeepEqual(currentSteps, check.Steps) {
+			log.Printf("!!!!!!!!!!!!!!!!!!!!!!!!!! STEPS ARE EQUALS")
+			updateSteps = false
+		}
+	}
+
+	if updateSteps {
+		stepsString, err := yaml.Marshal(&check.Steps)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		d.Set("steps", string(stepsString))
 	}
 
 	// Set name attribute from ID of object.
@@ -289,7 +309,6 @@ func resourceCheckRead(ctx context.Context, d *schema.ResourceData, m interface{
 	d.Set("interval", check.Interval)
 	d.Set("timeout", check.Timeout)
 	d.Set("client", check.Client)
-	d.Set("steps", string(stepsString))
 	d.Set("screenshot_on_error", check.ScreenshotOnError)
 	d.Set("enable", check.Enable)
 	d.Set("attributes", check.Attributes)
