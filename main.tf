@@ -96,8 +96,12 @@ provider "jmon" {
 terraform {
   required_providers {
     jmon = {
+      # Use provider version from Hashicorp registry
       source  = "dockstudios/jmon"
       # Other parameters...
+
+      # Use for building locally
+      #source  = "github.com/dockstudios/jmon"
     }
   }
 }
