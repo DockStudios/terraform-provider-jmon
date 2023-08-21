@@ -28,7 +28,7 @@ resource "jmon_check" "full_check" {
   - screenshot: Homepage
 EOF
 
-  interval = 20
+  interval = 600
 
   attributes = {
     notification_slack_channel = "test"
@@ -96,8 +96,12 @@ provider "jmon" {
 terraform {
   required_providers {
     jmon = {
+      # Use provider version from Hashicorp registry
       source  = "dockstudios/jmon"
       # Other parameters...
+
+      # Use for building locally
+      #source  = "github.com/dockstudios/jmon"
     }
   }
 }
