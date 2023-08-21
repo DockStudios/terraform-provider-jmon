@@ -28,7 +28,7 @@ resource "jmon_check" "full_check" {
   - screenshot: Homepage
 EOF
 
-  interval = 20
+  interval = 600
 
   attributes = {
     notification_slack_channel = "test"
