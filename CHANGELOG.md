@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.3](https://gitlab.dockstudios.co.uk/pub/jmon/jmon-terraform-provider/compare/v2.2.2...v2.2.3) (2023-08-21)
+
+
+### Bug Fixes
+
+* Perform deep compare of steps structure before updating state to avoid non-functional changes showing differences in Terraform plan ([aa64397](https://gitlab.dockstudios.co.uk/pub/jmon/jmon-terraform-provider/commit/aa64397b501e178e6f121d6d4b7c2d3dcc04fc69)), closes [#7](https://gitlab.dockstudios.co.uk/pub/jmon/jmon-terraform-provider/issues/7)
+
 ## [2.2.2](https://gitlab.dockstudios.co.uk/pub/jmon/jmon-terraform-provider/compare/v2.2.1...v2.2.2) (2023-08-11)
 
 
