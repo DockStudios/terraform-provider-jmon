@@ -15,6 +15,35 @@ cache:
     - .cache/pip
     - venv/
 
+
+test-docs:
+  stage: test
+  image: golang:1.20-bullseye
+  cache:
+    paths:
+      - /usr/bin/tfplugindocs
+  script: |
+    # Install tfplugindocs
+    if [ ! -f "/usr/bin/tfplugindocs/tfplugindocs" ]
+    then
+      mkdir /usr/bin/tfplugindocs
+      apt-get update
+      apt-get install wget unzip --assume-yes
+      apt-get clean all
+      pushd /usr/bin/tfplugindocs
+        wget https://github.com/hashicorp/terraform-plugin-docs/releases/download/v0.16.0/tfplugindocs_0.16.0_linux_arm64.zip
+        unzip tfplugindocs_0.16.0_linux_arm64.zip
+      popd
+    fi
+    # Generate documentation
+    /usr/bin/tfplugindocs/tfplugindocs generate
+    # Check if there are any changes
+    if [ "$(git diff | wc -l)" != "0" ]
+    then
+      echo Documentation needs re-generating
+      exit 1
+    fi
+
 release:
   stage: deploy
   image: semantic-release:latest
