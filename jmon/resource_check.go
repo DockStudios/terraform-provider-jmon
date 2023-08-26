@@ -287,7 +287,6 @@ func resourceCheckRead(ctx context.Context, d *schema.ResourceData, m interface{
 	ymlErr := yaml.Unmarshal([]byte(d.Get("steps").(string)), &currentSteps)
 	if ymlErr == nil {
 		if reflect.DeepEqual(currentSteps, check.Steps) {
-			log.Printf("!!!!!!!!!!!!!!!!!!!!!!!!!! STEPS ARE EQUALS")
 			updateSteps = false
 		}
 	}
