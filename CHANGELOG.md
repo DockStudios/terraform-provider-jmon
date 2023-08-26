@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.2.5](https://gitlab.dockstudios.co.uk/pub/jmon/jmon-terraform-provider/compare/v2.2.4...v2.2.5) (2023-08-26)
+
+
+### Bug Fixes
+
+* Fix removing attributes from a check not being detected and being set to default values. ([2d74852](https://gitlab.dockstudios.co.uk/pub/jmon/jmon-terraform-provider/commit/2d748524f640ff6c31328bb5d85394efa1119b20)), closes [#10](https://gitlab.dockstudios.co.uk/pub/jmon/jmon-terraform-provider/issues/10)
+* Update Makefile to use registry.terraform.io rather than github to override default provider, rather than requiring a different provider path to be used ([a2685df](https://gitlab.dockstudios.co.uk/pub/jmon/jmon-terraform-provider/commit/a2685df0ec92123b05d13f1d2a6822884113d330)), closes [#10](https://gitlab.dockstudios.co.uk/pub/jmon/jmon-terraform-provider/issues/10)
+
 ## [2.2.3](https://gitlab.dockstudios.co.uk/pub/jmon/jmon-terraform-provider/compare/v2.2.2...v2.2.3) (2023-08-21)
 
 
